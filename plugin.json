@@ -1,7 +1,7 @@
 {
   "id": "neodex.virage",
   "name": "Virage",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "NDesumeur",
   "description": "Jeu de course en pixel art vu de dessus, contre la montre : six circuits (prairie, épingles, banquise, dunes, turbo, nœud), trois tours, des écarts à chaque point de passage, le fantôme de ton meilleur chrono et des médailles de bronze à auteur. Herbe, sable, glace et flèches turbo.",
   "icon": "icon.png",

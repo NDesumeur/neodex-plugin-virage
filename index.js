@@ -320,7 +320,7 @@ const pxFont = (g, text, x, y, color, size = 8, align = 'left') => { const s = P
 
 /* ---------- Virage : course contre la montre vue de dessus. Six circuits, trois tours, des points de passage, un fantôme de ton meilleur
    chrono, des médailles (bronze, argent, or, auteur). Le bitume tient, l'herbe et le sable freinent, la glace glisse, les flèches accélèrent ---------- */
-const VR = {W: 200, H: 150, LAPS: 3, ROAD: 30, CURB: 3};
+const VR = {W: 200, H: 150, LAPS: 3, ROAD: 36, CURB: 3};
 // une nouvelle partie garde le même objet : la boucle du jeu (gameLoop) continue de tourner dessus
 const renew = (old, o) => { if (!old) return o; for (const k of Object.keys(old)) if (k !== 'raf') delete old[k]; return Object.assign(old, o); };
 const vrs = gstore('virage', {best: {}, laps: {}, splits: {}, ghosts: {}, medals: {}, games: 0, track: 0});
@@ -331,9 +331,9 @@ const VR_TRACKS = [
   {name: 'Prairie', pts: [[100, 250], [150, 120], [350, 90], [550, 120], [600, 250], [550, 380], [350, 410], [150, 380]]},
   {name: 'Épingles', pts: [[80, 100], [600, 100], [650, 160], [600, 220], [220, 220], [170, 280], [220, 340], [600, 340], [650, 400], [600, 460], [80, 460], [40, 280]]},
   {name: 'Banquise', pts: [[100, 150], [300, 80], [500, 120], [620, 260], [520, 400], [350, 340], [200, 420], [80, 320]], ice: [[.28, .58]]},
-  {name: 'Dunes', pts: [[80, 250], [160, 100], [300, 160], [380, 80], [520, 120], [620, 240], [540, 380], [420, 320], [300, 420], [160, 400]], sand: 1, road: 26},
+  {name: 'Dunes', pts: [[80, 250], [160, 100], [300, 160], [380, 80], [520, 120], [620, 240], [540, 380], [420, 320], [300, 420], [160, 400]], sand: 1, road: 32},
   {name: 'Turbo', pts: [[60, 80], [640, 80], [670, 140], [610, 180], [670, 220], [640, 420], [60, 420], [30, 250]], boost: [.02, .3, .5, .78]},
-  {name: 'Nœud', pts: [[100, 80], [270, 60], [310, 160], [220, 200], [270, 280], [420, 240], [460, 100], [610, 120], [630, 300], [510, 440], [300, 430], [150, 450], [60, 320], [160, 250], [60, 170]], road: 26, ice: [[.62, .72]], boost: [.05, .45]},
+  {name: 'Nœud', pts: [[100, 80], [270, 60], [310, 160], [220, 200], [270, 280], [420, 240], [460, 100], [610, 120], [630, 300], [510, 440], [300, 430], [150, 450], [60, 320], [160, 250], [60, 170]], road: 32, ice: [[.62, .72]], boost: [.05, .45]},
 ];
 // le tracé lissé (Catmull-Rom), un point tous les 2 pixels ; puis la carte des sols : 0 herbe, 1 bitume, 2 turbo, 3 glace, 4 sable, 5 bordure
 function vrBuild(def) {
@@ -356,7 +356,7 @@ function vrBuild(def) {
   return {def, pts, N, W, H, surf, idx, road, cps, boosts};
 }
 const vrTracks = VR_TRACKS.map(vrBuild);
-const VR_GRIP = [.86, .8, .8, .975, .88, .82], VR_MAX = [1.05, 2.7, 4.4, 2.7, .8, 2.2], VR_DRAG = [.965, .992, .992, .996, .955, .985];
+const VR_GRIP = [.84, .74, .74, .95, .86, .78], VR_MAX = [1.6, 2.7, 4.4, 2.7, 1.25, 2.4], VR_DRAG = [.976, .992, .992, .996, .968, .988];  // assez d'adhérence et des bas-côtés qui freinent sans arrêter : la course reste jouable
 function vrNew(ti = vrs.track) {
   const g = vr?.g, T = vrTracks[ti], p0 = T.pts[0], p1 = T.pts[6];
   vr = renew(vr, {g, mode: 'ready', tick: 0, seen: 0, ti, T, x: p0[0], y: p0[1], a: Math.atan2(p1[0] - p0[0], -(p1[1] - p0[1])), vx: 0, vy: 0, keys: new Set(),
@@ -368,9 +368,9 @@ const VR_B32 = '0123456789abcdefghijklmnopqrstuv';
 const vrEnc = s => s.map(([x, y, a]) => [x >> 5, x & 31, y >> 5, y & 31, a & 31].map(v => VR_B32[Math.max(0, Math.min(31, v))]).join('')).join('');
 const vrDec = str => { const out = []; for (let i = 0; i + 5 <= str.length; i += 5) { const v = [...str.slice(i, i + 5)].map(c => VR_B32.indexOf(c)); out.push([v[0] * 32 + v[1], v[2] * 32 + v[3], v[4]]); } return out; };
 const vrGhostLoad = ti => vrs.ghosts[ti] ? vrDec(vrs.ghosts[ti]) : null;
-// le chrono de l'auteur (le pilote automatique) fixe les médailles : or +5 %, argent +15 %, bronze +30 %
+// le chrono de l'auteur (le pilote automatique) fixe les médailles : or +12 %, argent +30 %, bronze +60 %
 const vrAuthor = [];
-const vrMedals = ti => { const a = vrAuthor[ti]; return a ? {auteur: a, or: Math.round(a * 1.05), argent: Math.round(a * 1.15), bronze: Math.round(a * 1.3)} : null; };
+const vrMedals = ti => { const a = vrAuthor[ti]; return a ? {auteur: a, or: Math.round(a * 1.12), argent: Math.round(a * 1.3), bronze: Math.round(a * 1.6)} : null; };
 const vrMedalOf = (ti, t) => { const m = vrMedals(ti); if (!m || !t) return ''; return t <= m.auteur ? 'auteur' : t <= m.or ? 'or' : t <= m.argent ? 'argent' : t <= m.bronze ? 'bronze' : ''; };
 const vrUnlocked = ti => ti === 0 || !!vrs.medals[ti - 1];
 const vrSurf = (T, x, y) => { const xi = Math.floor(x), yi = Math.floor(y); return xi < 0 || yi < 0 || xi >= T.W || yi >= T.H ? 0 : T.surf[yi * T.W + xi]; };
@@ -416,7 +416,7 @@ function vrUpdate() {
   if (up) vf += s === 3 ? .035 : .06; if (down) vf -= vf > 0 ? .1 : .03;
   if (vr.boost > 0) vf = Math.max(vf, Math.min(4.4, vf + .12));
   vf *= VR_DRAG[s]; if (vf > max) vf += (max - vf) * .08; if (vf < -1) vf = -1;
-  vr.a += steer * .05 * Math.min(1, Math.abs(vf) / 1.1) * Math.sign(vf || 1);
+  vr.a += steer * .06 * Math.min(1, Math.abs(vf) / 1.1) * Math.sign(vf || 1);
   vl *= VR_GRIP[s];
   vr.vx = fx * vf + rx * vl; vr.vy = fy * vf + ry * vl;
   vr.x = Math.max(4, Math.min(T.W - 4, vr.x + vr.vx)); vr.y = Math.max(4, Math.min(T.H - 4, vr.y + vr.vy));
