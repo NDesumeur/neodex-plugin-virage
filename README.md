@@ -32,3 +32,7 @@ Tes chronos et tes fantômes sont enregistrés par NeoDex, sauvegardés et synch
 Dans NeoDex : **NeoStore → À découvrir → Virage → Installer**.
 
 Développer un plugin : voir le [SDK NeoDex](https://github.com/NDesumeur/neodex-sdk).
+
+## Plein écran
+
+Le bouton « PLEIN ÉCRAN » met le jeu en plein écran. Le jeu grandit aussi avec la fenêtre, du petit portable au grand écran.

@@ -5,13 +5,15 @@ const HTML = `<div class="appWrap wide">
   <div class="gMain"><div class="gameBox"><canvas id="vrCanvas" width="200" height="150" role="img" aria-label="Virage"></canvas></div>
     <div class="gSide">
       <div class="sysCard"><b>RECORDS</b><div class="gStats" id="vrStats"></div></div>
-      <div class="row"><button class="btn main" id="vrNew">NOUVELLE PARTIE</button></div>
+      <div class="row"><button class="btn main" id="vrNew">NOUVELLE PARTIE</button><button class="btn" id="vrFs">PLEIN ÉCRAN</button></div>
       <div class="hint">Trois tours le plus vite possible. Le bitume tient la route, l'herbe et le sable freinent, la glace glisse et les flèches bleues donnent un coup de turbo. Passe les quatre plots bleus : à chacun, l'écart avec ton meilleur chrono s'affiche en vert ou en rouge. Ton meilleur chrono roule à côté de toi en fantôme. Bronze, argent, or et médaille d'auteur ; une médaille ouvre le circuit suivant. Entrée recommence tout de suite.</div>
     </div></div>
 </div>`;
 const CSS = `.gMain{display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap}
 .gameBox{display:grid;place-items:center;padding:10px;background:#05010b;flex:0 0 auto;position:relative}
-.gameBox canvas{height:min(72vh,600px);width:auto;aspect-ratio:200/150;image-rendering:pixelated;cursor:var(--cp,pointer);touch-action:none}
+.gameBox:fullscreen{padding:0}
+.gameBox:fullscreen canvas{height:100vh;max-width:100vw}
+.gameBox canvas{height:min(calc(100vh - 190px),900px);min-height:300px;max-width:100%;width:auto;aspect-ratio:200/150;image-rendering:pixelated;cursor:var(--cp,pointer);touch-action:none}
 .gSide{display:flex;flex-direction:column;gap:14px;flex:1;min-width:250px;max-width:420px}
 .gSide .sysCard{display:flex;flex-direction:column}
 .gStats{display:grid;grid-template-columns:1fr auto;gap:4px 14px}
@@ -288,7 +290,7 @@ export default async function (ctx) {
   view.innerHTML = HTML;
   pxSkin(view.querySelector('.appWrap'), { title: "VIRAGE", T: {"k": "#0c0a12", "k2": "#16121e", "fill": "#221c2c", "fillOn": "#2e263a", "hl": "#3a3046", "line": "#62566e", "acc": "#e83a3a", "accL": "#ffc8c0", "accS": "#a82a2a", "accD": "#2a0a08", "rivet": "#f0f0f8", "btn": "#3a3046", "btnHi": "#62566e", "btnLo": "#16121e", "btnHov": "#443852", "btnHovHi": "#82768e", "text": "#f4f0f8", "muted": "#c0b8cc", "acc2": "#7ee07a", "gold": "#ffd84a", "orange": "#ff8a3a", "red": "#ff4a3a", "green": "#7ee07a", "green2": "#2f8a3a", "bg": "#100c16", "bgDot": "#221c2c", "bgDot2": "#16121e", "spark": "#2a0a08", "spark2": "#e83a3a", "tile": ["................", "...:............", "................", "..........+.....", "................", "................", ".....:..........", "................", "................", ".............:..", "................", "..+.............", "................", ".........:......", "................", "................"]},
   emblem: ["...kkkkk....", "..kgrrrgk...", ".kkrwwwrkk..", ".kkrwwwrkk..", "..krrrrrr...", "..krwrwrr...", "..krrrrrr...", ".kkrwwwrkk..", ".kkrrrrrrk..", "..korrrok...", "...kkkkk....", "............"],
-  icons: [[/^NOUVELLE/, 'play'], [/^RECORDS/, 'crown']] });
+  icons: [[/^NOUVELLE/, 'play'], [/^RECORDS/, 'crown'], [/^PLEIN/, 'full']] });
   const $ = id => view.querySelector('#' + id) || document.getElementById(id);
   const doc = async n => { try { return await folder.read(n); } catch { return null; } };
   const games = { best: {}, ...(await doc('games')) };
@@ -545,6 +547,7 @@ function vrBot() {
   Object.assign(vrs, JSON.parse(keepS)); for (const k of Object.keys(vrs)) if (!(k in JSON.parse(keepS))) delete vrs[k];
   vr = keep; vrMute = false;
 }
+$('vrFs').onclick = () => { $('vrFs').blur(); try { document.fullscreenElement ? document.exitFullscreen() : $('vrCanvas').parentElement.requestFullscreen?.().catch(() => {}); } catch {} };
 ctx.onOpen(() => {
   if (!vr || !vr.g) { vrNew(vrUnlocked(vrs.track) ? vrs.track : 0); vr.g = $('vrCanvas').getContext('2d'); }
   gameLoop(vr, 'virage', vrUpdate, vrDraw); vrInfo();

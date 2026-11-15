@@ -32,3 +32,7 @@ Your times and ghosts are saved by NeoDex, backed up and synced between your PCs
 In NeoDex: **NeoStore → Discover → Hairpin → Install**.
 
 Building a plugin: see the [NeoDex SDK](https://github.com/NDesumeur/neodex-sdk).
+
+## Full screen
+
+The "FULL SCREEN" button puts the game in full screen. The game also grows with the window, from a small laptop to a big screen.
