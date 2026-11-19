@@ -1,9 +1,9 @@
 {
   "pluginId": "neodex.virage",
   "repo": "NDesumeur/neodex-plugin-virage",
-  "version": "1.1.1",
-  "sha256": "cc73fd4461d0f6be1ef61a6ef41c897c5201792a3ee38f846ce93934d4b06bf6",
-  "approvedAt": "2026-11-16T16:38:52.433Z",
+  "version": "1.1.2",
+  "sha256": "6eecdd285c43107143a210dc009a576abfefc6d31ee37c1f3ed248d312ac171f",
+  "approvedAt": "2026-11-19T23:26:37.865Z",
   "neobase": ">=4.0.0",
-  "signature": "HenZLWsmvBRHaHuwOr1ml0c9Cy/iBpinihkV5130eg/8bdFXJQos7AvfxqYzhznkVgYrB/d6lOJFD9v5przjAA=="
+  "signature": "SzmE08KFvvXzD5ocm0SDEivVXEj8ZXEmflu9I9qJur3cYmVVw2vuEpGe3FivTJMNshbVBTE/0fT+iNhAGkvtDQ=="
 }
