@@ -4,6 +4,10 @@ Une course contre la montre en pixel art, vue de dessus : trois tours le plus vi
 
 *English version: [README.en.md](README.en.md)*
 
+## Dérapage et turbo (nouveau en 1.2.0)
+
+En virage, assez vite et sur la route, tiens **Espace** (ou **Maj**) : la voiture dérape, tourne plus serré et remplit la jauge TURBO en bas à gauche. Lâche : au-delà du trait blanc, étincelles bleues et turbo court ; jauge pleine, étincelles orange et turbo long. Le nombre de turbos gagnés est compté dans les records.
+
 ## Commandes
 
 - **↑** : accélérer, **↓** : freiner.

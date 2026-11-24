@@ -4,6 +4,10 @@ A top-down pixel art time-trial race: three laps as fast as you can, against the
 
 *Version française : [README.md](README.md)*
 
+## Drift and turbo (new in 1.2.0)
+
+In a turn, fast enough and on the road, hold **Space** (or **Shift**): the car drifts, turns tighter and fills the TURBO gauge at the bottom left. Let go: past the white mark, blue sparks and a short turbo; full gauge, orange sparks and a long turbo. The number of turbos earned is counted in the records.
+
 ## Controls
 
 - **↑**: accelerate, **↓**: brake.

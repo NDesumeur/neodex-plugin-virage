@@ -358,11 +358,12 @@ function vrBuild(def) {
   return {def, pts, N, W, H, surf, idx, road, cps, boosts};
 }
 const vrTracks = VR_TRACKS.map(vrBuild);
+const VR_DRIFT = [60, 150];  // la jauge du dérapage : turbo court, puis turbo long
 const VR_GRIP = [.84, .74, .74, .95, .86, .78], VR_MAX = [1.6, 2.7, 4.4, 2.7, 1.25, 2.4], VR_DRAG = [.976, .992, .992, .996, .968, .988];  // assez d'adhérence et des bas-côtés qui freinent sans arrêter : la course reste jouable
 function vrNew(ti = vrs.track) {
   const g = vr?.g, T = vrTracks[ti], p0 = T.pts[0], p1 = T.pts[6];
   vr = renew(vr, {g, mode: 'ready', tick: 0, seen: 0, ti, T, x: p0[0], y: p0[1], a: Math.atan2(p1[0] - p0[0], -(p1[1] - p0[1])), vx: 0, vy: 0, keys: new Set(),
-    t: 0, count: 180, prog: 0, lap: 0, cp: 0, lapStart: 0, laps: [], splits: [], split: null, rec: [], boost: 0, fx: [], dead: 0, won: 0, medal: '', record: false, ghost: vrGhostLoad(ti), skid: []});
+    t: 0, count: 180, prog: 0, lap: 0, cp: 0, lapStart: 0, laps: [], splits: [], split: null, rec: [], boost: 0, fx: [], dead: 0, won: 0, medal: '', record: false, ghost: vrGhostLoad(ti), skid: [], drift: 0, drifts: 0});
   vrInfo();
 }
 // le fantôme : x, y et angle tous les 6 images, rangés en texte court (base 32) pour la synchro
@@ -403,7 +404,7 @@ function vrFinish() {
   const bl = Math.min(...vr.laps); if (!vrs.laps[ti] || bl < vrs.laps[ti]) vrs.laps[ti] = bl;
   vr.medal = vrMedalOf(ti, vr.t); const order = ['', 'bronze', 'argent', 'or', 'auteur'];
   if (order.indexOf(vr.medal) > order.indexOf(vrs.medals[ti] || '')) vrs.medals[ti] = vr.medal;
-  saveGames(); vrInfo();
+  vrs.drifts = (vrs.drifts || 0) + vr.drifts; saveGames(); vrInfo();
   [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => vrBeep(f, .14, 'triangle'), i * 110));
 }
 function vrUpdate() {
@@ -417,9 +418,14 @@ function vrUpdate() {
   if (vr.boost > 0) vr.boost--;
   if (up) vf += s === 3 ? .035 : .06; if (down) vf -= vf > 0 ? .1 : .03;
   if (vr.boost > 0) vf = Math.max(vf, Math.min(4.4, vf + .12));
-  vf *= VR_DRAG[s]; if (vf > max) vf += (max - vf) * .08; if (vf < -1) vf = -1;
-  vr.a += steer * .06 * Math.min(1, Math.abs(vf) / 1.1) * Math.sign(vf || 1);
-  vl *= VR_GRIP[s];
+  // le dérapage (Espace ou Maj en tournant, assez vite, sur la route) : la voiture tourne plus serré et glisse ; il remplit la jauge,
+  // et le lâcher donne un turbo, court (bleu) ou long (orange) selon la jauge
+  const drift = vr.keys.has('X') && vf > 1.6 && steer !== 0 && s !== 0 && s !== 4;
+  if (drift) vr.drift += 1 + Math.abs(vl) * 1.5;
+  else if (vr.drift) { const b = vr.drift >= VR_DRIFT[1] ? 75 : vr.drift >= VR_DRIFT[0] ? 40 : 0; if (b) { vr.boost = Math.max(vr.boost, b); vr.drifts++; vrBeep(b > 40 ? 660 : 520, .25, 'square', b > 40 ? 1320 : 1040); } vr.drift = 0; }
+  vf *= VR_DRAG[s] * (drift ? .997 : 1); if (vf > max) vf += (max - vf) * .08; if (vf < -1) vf = -1;
+  vr.a += steer * .06 * (drift ? 1.45 : 1) * Math.min(1, Math.abs(vf) / 1.1) * Math.sign(vf || 1);
+  vl *= drift ? Math.max(VR_GRIP[s], .95) : VR_GRIP[s];
   vr.vx = fx * vf + rx * vl; vr.vy = fy * vf + ry * vl;
   vr.x = Math.max(4, Math.min(T.W - 4, vr.x + vr.vx)); vr.y = Math.max(4, Math.min(T.H - 4, vr.y + vr.vy));
   if (Math.abs(vl) > .6 && vr.t % 2 === 0) vr.skid.push([vr.x - fx * 4, vr.y - fy * 4, 240]);
@@ -481,6 +487,10 @@ function vrDraw() {
     if (a) { g.globalAlpha = .55; g.drawImage(vrCar(a[2] / 32 * Math.PI * 2, VR_GPAL, 'g'), Math.round(a[0] + (b[0] - a[0]) * f - cx - 8), Math.round(a[1] + (b[1] - a[1]) * f - cy - 8)); g.globalAlpha = 1; } }
   g.globalAlpha = .35; g.drawImage(vrCar(vr.a, {k: '#000', c: '#000', K: '#000', w: '#000', y: '#000', s: '#000', R: '#000'}, 's'), Math.round(vr.x - cx - 7), Math.round(vr.y - cy - 6)); g.globalAlpha = 1;
   g.drawImage(vrCar(vr.a, VR_PAL, 'p'), Math.round(vr.x - cx - 8), Math.round(vr.y - cy - 8));
+  if (vr.drift >= VR_DRIFT[0]) { const c = vr.drift >= VR_DRIFT[1] ? ['#ff8a2a', '#ffd84a'] : ['#3a8aff', '#b0e0ff'], bx = vr.x - Math.sin(vr.a) * 6 - cx, by = vr.y + Math.cos(vr.a) * 6 - cy;  // les étincelles aux roues arrière
+    for (const sd of [-1, 1]) { const x = bx + Math.cos(vr.a) * 4 * sd, y = by + Math.sin(vr.a) * 4 * sd; px(g, c[vr.t % 2], x - 1 + (vr.t * 7 + sd) % 3 - 1, y - 1 + (vr.t * 5) % 3 - 1, 2, 2); } }
+  if (vr.drift > 0) { const w = Math.min(40, vr.drift / VR_DRIFT[1] * 40); px(g, 'rgba(14,10,20,.8)', 2, H - 12, 44, 10); px(g, '#2a2438', 4, H - 6, 40, 3);
+    px(g, vr.drift >= VR_DRIFT[1] ? '#ff8a2a' : vr.drift >= VR_DRIFT[0] ? '#3a8aff' : '#8a8aa0', 4, H - 6, w, 3); px(g, '#ffffff', 4 + VR_DRIFT[0] / VR_DRIFT[1] * 40, H - 7, 1, 5); pxFont(g, 'TURBO', 4, H - 7, '#ffffff', 6); }
   if (vr.boost > 0 && vr.t % 4 < 2) { const bx = vr.x - Math.sin(vr.a) * 9 - cx, by = vr.y + Math.cos(vr.a) * 9 - cy; px(g, '#ffd84a', bx - 1, by - 1, 3, 3); px(g, '#ff8a2a', bx, by, 1, 1); }
   // le haut : temps, tour, écart au meilleur chrono ; la petite carte en bas à droite
   px(g, 'rgba(14,10,20,.8)', 0, 0, W, 12);
@@ -489,7 +499,7 @@ function vrDraw() {
   const bt = vrs.best[vr.ti]; pxFont(g, bt ? vrTime(bt) : '--', W - 3, 9, '#b8b0c8', 8, 'right');
   if (vr.split && vr.split.d !== null) { const d = vr.split.d; pxFont(g, (d <= 0 ? '-' : '+') + (Math.abs(d) / 60).toFixed(2), W / 2, 26, d <= 0 ? '#7ae05a' : '#ff6a5a', 12, 'center'); }
   px(g, 'rgba(14,10,20,.7)', W - 46, H - 36, 46, 36); g.drawImage(M.mm, W - 45, H - 35); px(g, '#ff4a3a', W - 45 + 1 + vr.x * M.sc - 1, H - 35 + 1 + vr.y * M.sc - 1, 3, 3);
-  if (vr.mode === 'ready') { const m = vrMedals(vr.ti); gameText(g, W, [[T.def.name.toUpperCase() + ' · ' + VR.LAPS + ' TOURS', '#ffd84a', 12], ['↑ accélérer · ← → tourner', '#ffffff'], ['Entrée : recommencer à tout moment', '#b8d0ff'], [m ? 'Or : ' + vrTime(m.or) : '', '#ffd84a'], ['Espace : départ', '#b8b0c8']], 38); }
+  if (vr.mode === 'ready') { const m = vrMedals(vr.ti); gameText(g, W, [[T.def.name.toUpperCase() + ' · ' + VR.LAPS + ' TOURS', '#ffd84a', 12], ['↑ accélérer · ← → tourner', '#ffffff'], ['Espace en virage : déraper, puis turbo', '#ffb070'], ['Entrée : recommencer à tout moment', '#b8d0ff'], [m ? 'Or : ' + vrTime(m.or) : '', '#ffd84a'], ['Espace : départ', '#b8b0c8']], 38); }
   if (vr.mode === 'play' && vr.count > 0) pxFont(g, String(Math.ceil(vr.count / 60)), W / 2, 70, '#ffd84a', 24, 'center');
   if (vr.mode === 'play' && vr.count === 0 && vr.t < 40) pxFont(g, 'PARTEZ !', W / 2, 70, '#7ae05a', 16, 'center');
   if (vr.mode === 'pause') gameText(g, W, [['PAUSE', '#ffd84a', 12], ['Entrée : reprendre', '#b8b0c8']], 60);
@@ -500,9 +510,9 @@ function vrDraw() {
 function vrInfo() {
   const ti = vr ? vr.ti : vrs.track, m = vrMedals(ti);
   $('vrStats').replaceChildren(...[['Circuit', (ti + 1) + '. ' + VR_TRACKS[ti].name], ['Meilleur temps', vrs.best[ti] ? vrTime(vrs.best[ti]) : '--'], ['Meilleur tour', vrs.laps[ti] ? vrTime(vrs.laps[ti]) : '--'], ['Médaille', vrs.medals[ti] || '--'],
-    ['Or en', m ? vrTime(m.or) : '--'], ['Auteur', m ? vrTime(m.auteur) : '--'], ['Médailles', Object.values(vrs.medals).filter(Boolean).length + ' / ' + VR_TRACKS.length]].flatMap(([a, c]) => [el('span', '', a), el('b', '', String(c))]));
+    ['Or en', m ? vrTime(m.or) : '--'], ['Auteur', m ? vrTime(m.auteur) : '--'], ['Médailles', Object.values(vrs.medals).filter(Boolean).length + ' / ' + VR_TRACKS.length], ['Turbos de dérapage', vrs.drifts || 0]].flatMap(([a, c]) => [el('span', '', a), el('b', '', String(c))]));
 }
-const VR_KEYS = {ArrowUp: 'U', z: 'U', w: 'U', ArrowDown: 'D', s: 'D', ArrowLeft: 'L', q: 'L', a: 'L', ArrowRight: 'R', d: 'R'};
+const VR_KEYS = {' ': 'X', Shift: 'X', x: 'X', ArrowUp: 'U', z: 'U', w: 'U', ArrowDown: 'D', s: 'D', ArrowLeft: 'L', q: 'L', a: 'L', ArrowRight: 'R', d: 'R'};
 function vrPickTrack(dir) { let ti = vr.ti; do ti = (ti + dir + VR_TRACKS.length) % VR_TRACKS.length; while (!vrUnlocked(ti)); vrs.track = ti; saveGames(); vrNew(ti); }
 document.addEventListener('keydown', e => {
   if (!view.classList.contains('on') || !vr || /INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return;
@@ -542,6 +552,9 @@ function vrBot() {
   }
   vr = null; vrNew(0); vr.mode = 'play'; vr.count = 0; const far = vr.T.pts[Math.floor(vr.T.N * .5)]; vr.x = far[0]; vr.y = far[1]; for (let t = 0; t < 5; t++) vrUpdate();
   if (vr.cp > 0 || vr.prog > 60) bad.push('raccourci compté');
+  vr = null; vrNew(0); vr.mode = 'play'; vr.count = 0; { const p = vr.T.pts[0]; vr.x = p[0]; vr.y = p[1]; } vr.vx = Math.sin(vr.a) * 2.6; vr.vy = -Math.cos(vr.a) * 2.6; vr.keys = new Set(['U', 'R', 'X']);
+  let full = 0; for (let t = 0; t < 120; t++) { const p = vr.T.pts[0]; vr.x = p[0]; vr.y = p[1]; vr.vx = Math.sin(vr.a - .3) * 2.6; vr.vy = -Math.cos(vr.a - .3) * 2.6; vrUpdate(); full = Math.max(full, vr.drift); }  vr.keys.delete('X'); vrUpdate();  // gardée sur la route, en glissade
+  if (full < VR_DRIFT[1] || vr.boost < 70 || vr.drifts !== 1) bad.push('dérapage : jauge ' + Math.round(full) + ', turbo ' + vr.boost);
   const sample = [[0, 0, 0], [1023, 517, 31], [300, 200, 7]]; if (JSON.stringify(vrDec(vrEnc(sample))) !== JSON.stringify(sample)) bad.push('fantôme mal rangé');
   console.assert(!bad.length, 'virage', bad);
   Object.assign(vrs, JSON.parse(keepS)); for (const k of Object.keys(vrs)) if (!(k in JSON.parse(keepS))) delete vrs[k];

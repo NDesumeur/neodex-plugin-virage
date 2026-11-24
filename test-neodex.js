@@ -16,6 +16,9 @@ await shot('0-depart');
   await ev('keydown', ' '); await sleep(1500); await shot('1-compte');
   await sleep(1800); await ev('keydown', 'ArrowUp'); await sleep(2500); await shot('2-route');
   await ev('keydown', 'ArrowRight'); await sleep(500); await ev('keyup', 'ArrowRight'); await sleep(1500); await shot('3-plus-loin');
+  // un dérapage : Espace tenu en tournant remplit la jauge (étincelles) ; le lâcher donne un turbo
+  await ev('keydown', 'ArrowRight'); await ev('keydown', ' '); await sleep(900); await shot('4-derapage');
+  await ev('keyup', ' '); await ev('keyup', 'ArrowRight'); await sleep(100);
   await ev('keyup', 'ArrowUp');
   const l = await label(), m = /: (\d+):(\d+)\.(\d+), .* vitesse (\d+)/.exec(l);
   if (!m || +m[2] < 2 || +m[4] < 10) throw new Error('la voiture devait rouler et le chrono tourner : « ' + l + ' »');
