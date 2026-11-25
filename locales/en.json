@@ -96,5 +96,17 @@
  "Espace en virage : déraper, puis turbo": "Space in a turn: drift, then turbo",
  "Turbos de dérapage": "Drift turbos",
  "dérapage : jauge": "drift: gauge",
- "Jeu de course en pixel art vu de dessus, contre la montre : six circuits (prairie, épingles, banquise, dunes, turbo, nœud), trois tours, des écarts à chaque point de passage, le fantôme de ton meilleur chrono et des médailles de bronze à auteur. Herbe, sable, glace et flèches turbo. Version 1.1.0 : bouton plein écran, et le jeu grandit avec la fenêtre. Le dérapage remplit une jauge et donne un turbo.": "Top-down pixel art time-trial racing game: six tracks (meadow, hairpins, ice field, dunes, turbo, knot), three laps, splits at every checkpoint, the ghost of your best time and medals from bronze to author. Grass, sand, ice and turbo arrows. Version 1.1.0: a full screen button, and the game grows with the window. Drifting fills a gauge and gives a turbo."
+ "Jeu de course en pixel art vu de dessus, contre la montre : six circuits (prairie, épingles, banquise, dunes, turbo, nœud), trois tours, des écarts à chaque point de passage, le fantôme de ton meilleur chrono et des médailles de bronze à auteur. Herbe, sable, glace et flèches turbo. Version 1.1.0 : bouton plein écran, et le jeu grandit avec la fenêtre. Le dérapage remplit une jauge et donne un turbo.": "Top-down pixel art time-trial racing game: six tracks (meadow, hairpins, ice field, dunes, turbo, knot), three laps, splits at every checkpoint, the ghost of your best time and medals from bronze to author. Grass, sand, ice and turbo arrows. Version 1.1.0: a full screen button, and the game grows with the window. Drifting fills a gauge and gives a turbo.",
+ "Drapeau à damier": "Chequered flag",
+ "Finir une première course": "Finish your first race",
+ "Sur le podium": "On the podium",
+ "Gagner une médaille sur chaque circuit": "Win a medal on every track",
+ "Pilote en or": "Golden driver",
+ "Gagner une médaille d'or": "Win a gold medal",
+ "Que de l'or": "Nothing but gold",
+ "Gagner l'or sur les 6 circuits": "Win gold on all 6 tracks",
+ "Plus vite que l'auteur": "Faster than the author",
+ "Battre le temps de l'auteur sur un circuit": "Beat the author's time on a track",
+ "Habitué des circuits": "Track regular",
+ "Finir 100 courses": "Finish 100 races"
 }

@@ -299,6 +299,9 @@ export default async function (ctx) {
   const best = (k, v) => { const b = games.best[k]; if (v > (b ?? 0)) {  // un score nul n'est jamais un record
     games.best[k] = v; saveGames(); return true; } return false; };
   const gstore = (k, init) => (games[k] ??= init);
+  // les trophées de NeoDex (3.4.8 et plus) : succès et records déclarés dans plugin.json ; sur un NeoDex plus ancien, rien ne se passe
+  const trophy = id => { ctx.games?.unlock(id).catch(() => {}); };
+  const trophyRecord = (id, v) => { if (v != null && Number.isFinite(+v)) ctx.games?.record(id, +v).catch(() => {}); };
 function gameLoop(st, appKey, update, draw) {
   cancelAnimationFrame(st.raf);
   const STEP = 1000 / 60; let acc = 0, last = performance.now();
@@ -508,6 +511,7 @@ function vrDraw() {
     ', ' + ({0: 'dans l’herbe', 1: 'sur la route', 2: 'turbo', 3: 'sur la glace', 4: 'dans le sable', 5: 'sur la bordure'})[vrSurf(T, vr.x, vr.y)] + (vr.mode === 'over' ? ', arrivée' + (vr.medal ? ', médaille ' + vr.medal : '') : '') + '.');
 }
 function vrInfo() {
+  setTimeout(vrTrophies);
   const ti = vr ? vr.ti : vrs.track, m = vrMedals(ti);
   $('vrStats').replaceChildren(...[['Circuit', (ti + 1) + '. ' + VR_TRACKS[ti].name], ['Meilleur temps', vrs.best[ti] ? vrTime(vrs.best[ti]) : '--'], ['Meilleur tour', vrs.laps[ti] ? vrTime(vrs.laps[ti]) : '--'], ['Médaille', vrs.medals[ti] || '--'],
     ['Or en', m ? vrTime(m.or) : '--'], ['Auteur', m ? vrTime(m.auteur) : '--'], ['Médailles', Object.values(vrs.medals).filter(Boolean).length + ' / ' + VR_TRACKS.length], ['Turbos de dérapage', vrs.drifts || 0]].flatMap(([a, c]) => [el('span', '', a), el('b', '', String(c))]));
@@ -561,6 +565,14 @@ function vrBot() {
   vr = keep; vrMute = false;
 }
 $('vrFs').onclick = () => { $('vrFs').blur(); try { document.fullscreenElement ? document.exitFullscreen() : $('vrCanvas').parentElement.requestFullscreen?.().catch(() => {}); } catch {} };
+// les trophées, tirés des statistiques et des records gardés (aussi à l'ouverture : ce qui a été fait avant compte)
+function vrTrophies() {
+  const m = VR_TRACKS.map((T, i) => vrs.medals[i] || ''), sig = [vrs.games, m.join(), ...VR_TRACKS.map((T, i) => vrs.best[i])].join(); if (sig === vrTrophies.sig) return; vrTrophies.sig = sig;
+  VR_TRACKS.forEach((T, i) => trophyRecord('t' + i, vrs.best[i] ? Math.round(vrs.best[i] / 60 * 100) / 100 : null));  // vr.t compte des images, 60 par seconde
+  const gold = v => v === 'or' || v === 'auteur';
+  if (vrs.games >= 1) trophy('premier'); if (m.every(Boolean)) trophy('bronze'); if (m.some(gold)) trophy('or'); if (m.every(gold)) trophy('tout-or');
+  if (m.includes('auteur')) trophy('auteur'); if (vrs.games >= 100) trophy('cent');
+}
 ctx.onOpen(() => {
   if (!vr || !vr.g) { vrNew(vrUnlocked(vrs.track) ? vrs.track : 0); vr.g = $('vrCanvas').getContext('2d'); }
   gameLoop(vr, 'virage', vrUpdate, vrDraw); vrInfo();
